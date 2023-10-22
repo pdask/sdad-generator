@@ -1,0 +1,29 @@
+{#1}
+package gr.sdad.ui.wicket.pages.{$obj.subsystem};
+
+import gr.sdad.db.entities.sys.SysDikaiomaKodikos;
+import gr.sdad.db.entities.sys.SysRolosEpipedo;
+import gr.sdad.ui.wicket.InstantiationEpipeda;
+import gr.sdad.ui.wicket.InstantiationEpipedo;
+import gr.sdad.ui.wicket.SdadWicketPage;
+
+import lombok.Getter;
+
+@InstantiationEpipeda({
+	@InstantiationEpipedo(rolosEpipedo = SysRolosEpipedo.ABC, dikaiomaKodikoi = {
+		SysDikaiomaKodikos.ABC }) })
+public class {$obj.name}SearchPage extends SdadWicketPage {
+
+    @Getter
+    {$obj.name}SearchPanel mainPanel;
+
+    public {$obj.name}SearchPage() {
+
+        super();
+
+        mainPanel = new {$obj.name}SearchPanel(MAIN_PANEL_ID);
+
+    }
+
+}
+{#}

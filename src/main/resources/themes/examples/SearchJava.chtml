@@ -1,0 +1,240 @@
+{#1}
+package gr.sdad.ui.wicket.pages.{$obj.subsystem};
+
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
+import org.apache.wicket.markup.html.form.Form;
+
+import gr.sdad.arch.SdadMatcher;
+import {$obj.package_name}.{$obj.name};
+import gr.sdad.ui.wicket.CompoundPropertyModelForm;
+import gr.sdad.ui.wicket.SdadWicketPanel;
+import gr.sdad.ui.wicket.components.*;
+import gr.sdad.ui.wicket.components.datatable.SdadDataTableProvider;
+import gr.sdad.ui.wicket.components.datatable.SdadPropertyColumn;
+import gr.sdad.ui.wicket.components.datatable.SdadTablePanel;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+class {$obj.name}SearchPanel extends SdadWicketPanel {
+
+    private static final class LocalModel extends SdadMatcher<{$obj.name}> {
+        {.if ($obj.show_active) }
+
+		private Boolean energo = Boolean.TRUE;
+		{/if}
+
+		public LocalModel() {
+
+			super({$obj.name}.class);
+
+		}
+
+        {.if ($obj.show_active) }
+		@Override
+		protected void appendConditions(PrintStream qlStream) {
+
+			super.appendConditions(qlStream);
+			excludeHidden(qlStream);
+
+			if (Boolean.TRUE == energo) {
+				excludeArchived(qlStream);
+			} else if (Boolean.FALSE == energo) {
+				excludeCurrentlyActive(qlStream);
+			}
+
+		}
+
+		@Override
+		public LocalModel clear() {
+
+			this.energo = Boolean.TRUE;
+
+			return super.clear();
+
+		}
+		{/if}
+    }
+
+    private Form<LocalModel> form;
+
+	private SdadTablePanel<{$obj.name}> table;
+
+    {% loop in $obj.search_fields as $field %}
+    {.if ($field.criterion != none) }
+    {% if ($field.criterion != range) %}
+    {$field.component_declaration}
+    {% else %}
+    {$field.component_declaration_min}
+    {$field.component_declaration_max}
+    {% endif %}
+    {/if}
+    {% endloop %}
+
+    {.if ($obj.show_active) }
+    private SdadYesNoField energo;
+	{/if}
+
+    private SearchButton search;
+
+    private ResetButton reset;
+
+    public {$obj.name}SearchPanel(String id) {
+
+        super(id);
+
+    }
+
+    @Override
+    protected void onInitialize() {
+
+        super.onInitialize();
+
+        form = new CompoundPropertyModelForm<>("form", new LocalModel());
+        add(form);
+
+        {% loop in $obj.search_fields as $field %}
+        {.if ($field.criterion != none) }
+        {% if ($field.criterion != range) %}
+        {$field.component_creation}
+        form.add({$field.name});
+
+        {% else %}
+        {$field.component_creation_min}
+        form.add({$field.name}Apo);
+
+        {$field.component_creation_max}
+        form.add({$field.name}Eos);
+
+        {% endif %}
+        {/if}
+        {% endloop %}
+
+        {.if ($obj.show_active) }
+        energo = new SdadYesNoField("energo");
+        form.add(energo);
+        {/if}
+
+        search = new SearchButton();
+        reset = new ResetButton();
+        form.add(search, reset);
+
+        table = new SdadTablePanel<>(
+            "table",
+            getTableColumns(),
+            SdadDataTableProvider.fromMatcher(form.getModelObject())) {
+
+            @Override
+            protected void onProsthikiClicked(AjaxRequestTarget target) {
+
+                super.onProsthikiClicked(target);
+
+                new {$obj.name}Panel(0).refresh(table).show({$obj.name}SearchPanel.this, target);
+
+            }
+        };
+        table.setOutputMarkupId(true);
+        table.showProsthikiButton(hasDikaioma(SysDikaiomaKodikos.ABC));
+        add(table);
+
+    }
+
+    /** table columns **/
+    private List<IColumn<{$obj.name}, String>> getTableColumns() {
+
+        List<IColumn<{$obj.name}, String>> ret = new ArrayList<>();
+        if (hasDikaioma(SysDikaiomaKodikos.ABC)) {
+            ret.add(
+                new SdadClickableColumn<{$obj.name}>(new ResourceModel("caption.perigrafi")) {
+                    @Override
+                    protected IModel<String> getLinkDisplayModel(
+                        IModel<{$obj.name}> rowModel) {
+
+                        return PropertyModel.of(rowModel, "perigrafi");
+
+                    }
+
+                    @Override
+                    protected void defaultOnClick(
+                        IModel<{$obj.name}> rowModel,
+                        AjaxRequestTarget target) {
+
+                        super.defaultOnClick(rowModel, target);
+                        new {$obj.name}Panel(rowModel.getObject().getId()).refresh(table)
+                            .show({$obj.name}SearchPanel.this, target);
+
+                    }
+                }.setExcelViewType(ColumnViewType.PlainText));
+        } else {
+            ret.add(
+                new SdadPropertyColumn<{$obj.name}>("perigrafi")
+                    .setExcelViewType(ColumnViewType.PlainText));
+        }
+        {% loop in $obj.search_fields as $field %}
+        {.if ($field.column) }
+        ret.add(new SdadPropertyColumn<>("{$field.name}"));
+        {/if}
+        {% endloop %}
+        {.if ($obj.show_active) }
+		ret.add(
+			new SdadPropertyColumn<{$obj.name}>("currentlyActive")
+				.setSortingAttribute("rowArchived"));
+        {/if}
+        return ret;
+
+    }
+
+    private class SearchButton extends SdadAjaxSubmitLink {
+
+        public SearchButton() {
+
+            super("btnSearch");
+
+        }
+
+        @Override
+        protected void defaultOnSubmit(AjaxRequestTarget target) {
+
+            super.defaultOnSubmit(target);
+            refreshComponents(target, table);
+            log.debug("{}.defaultOnClick: {}", this.getId(), form.getModelObject());
+
+        }
+
+    }
+
+    private class ResetButton extends SdadAjaxLink {
+
+        public ResetButton() {
+
+            super("btnReset");
+
+        }
+
+        @Override
+        protected void defaultOnClick(AjaxRequestTarget target) {
+
+            super.defaultOnClick(target);// update initial state object
+
+            LocalModel clearedModel = form.getModelObject().clear();
+
+            // set the 'cleared' model object as current
+            form.getModel().setObject(clearedModel);
+
+            refreshComponents(target, table, form);
+
+            successFormatted("message.successfully.reset");
+
+            log.debug("{}.defaultOnClick: {}", this.getId(), form.getModelObject());
+
+        }
+
+    }
+
+}
+{#}

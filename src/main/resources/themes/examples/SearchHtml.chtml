@@ -1,0 +1,49 @@
+{#1}
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org">
+<body>
+<wicket:panel>
+    <wicket:extend>
+        <form wicket:id="form" class="sdad-form sdad-criteria-form">
+
+            {% loop in $obj.search_fields as $field %}
+            {.if ($field.criterion != none) }
+            {% if ($field.criterion != range) %}
+            <div class="sdad-field">
+                <wicket:label for="{$field.wicket_id}" key="caption.{$field.name}"></wicket:label>
+                {$field.component_html}
+            </div>
+            {% else %}
+            <div class="sdad-field">
+                <wicket:label for="{$field.wicket_id_min}" key="caption.{$field.name}Apo"></wicket:label>
+                {$field.component_html_min}
+            </div>
+            <div class="sdad-field">
+                <wicket:label for="{$field.wicket_id_max}" key="caption.{$field.name}Eos"></wicket:label>
+                {$field.component_html_max}
+            </div>
+            {% endif %}
+            {/if}
+            {% endloop %}
+
+            {.if ($obj.show_active) }
+            <div class="sdad-field-small">
+                <wicket:label for="energo" key="caption.energo"/>
+                <span wicket:id="energo"></span>
+            </div>
+            {/if}
+
+            <div class="sdad-button-bar">
+                <input type="button" wicket:id="btnReset" wicket:message="value:caption.reset">
+                <input type="button" wicket:id="btnSearch" wicket:message="value:caption.search">
+            </div>
+
+        </form>
+        <div wicket:id="table" class="w3-panel"></div>
+
+    </wicket:extend>
+</wicket:panel>
+
+</body>
+</html>
+{#}

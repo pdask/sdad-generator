@@ -1,0 +1,36 @@
+{#1}
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org">
+<body>
+<wicket:panel>
+    <wicket:extend>
+        <form wicket:id="form" class="sdad-form">
+
+            {% loop in $obj.form_fields as $field %}
+            <div class="sdad-field">
+                <wicket:label for="{$field.wicket_id}" key="caption.{$field.wicket_id}"></wicket:label>
+                {$field.component_html}
+            </div>
+            {% endloop %}
+            {.if ($obj.show_active) }
+            <wicket:enclosure>
+                <div class="sdad-field-small">
+                    <wicket:label for="markedActive" key="caption.energo"/>
+                    <span wicket:id="markedActive"/>
+                </div>
+            </wicket:enclosure>
+            {/if}
+
+            <div class="sdad-button-bar">
+                <input type="button" wicket:id="btnReset" wicket:message="value:caption.reset">
+                <input type="button" wicket:id="btnSave" wicket:message="value:caption.save">
+            </div>
+
+        </form>
+
+    </wicket:extend>
+</wicket:panel>
+
+</body>
+</html>
+{#}

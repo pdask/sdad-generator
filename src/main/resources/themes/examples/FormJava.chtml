@@ -1,0 +1,193 @@
+{#1}
+package gr.sdad.ui.wicket.pages.{$obj.subsystem};
+
+import java.io.Serializable;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+
+import gr.sdad.db.entities.sys.SysDikaiomaKodikos;
+import {$obj.package_name}.{$obj.name};
+import gr.sdad.services.CoreSys;
+import gr.sdad.ui.wicket.CompoundPropertyModelForm;
+import gr.sdad.ui.wicket.SdadDualModePanel;
+import gr.sdad.ui.wicket.SdadFormMode;
+import gr.sdad.ui.wicket.components.SdadAjaxLink;
+import gr.sdad.ui.wicket.components.SdadAjaxSubmitLink;
+import gr.sdad.ui.wicket.components.SdadTextField;
+import gr.sdad.ui.wicket.components.SdadYesNoField;
+import gr.sol.wicket.validators.Validators;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+class {$obj.name}Panel extends SdadDualModePanel {
+
+    private static final class InitialState implements Serializable {
+        {$obj.id_type} modelId;
+        {$obj.name} modelObject;
+
+        void initWith({$obj.name} object) {
+
+            modelObject = object;
+            modelId = object.getId();
+
+        }
+
+    }
+    @SpringBean
+    CoreSys coreSys;
+
+    final InitialState initialState = new InitialState();
+
+    private Form<{$obj.name}> form;
+
+    {% loop in $obj.form_fields as $field %}
+    {$field.component_declaration}
+    {% endloop %}
+    {.if ($obj.show_active) }
+    private SdadYesNoField energo;
+    {/if}
+    private SaveButton save;
+
+    private ResetButton reset;
+
+    public {$obj.name}Panel({$obj.id_type} entityId) {
+        super();
+
+        initialState.initWith(loadOrCreate(entityId));
+
+    }
+
+    public {$obj.name}Panel() {
+        super();
+
+        initialState.initWith(loadOrCreate(0));
+
+    }
+
+    private {$obj.name} loadOrCreate({$obj.id_type} id) {
+
+        if (id == 0) {
+			setFormMode(SdadFormMode.EditingNew);
+            return newInstance();
+        } else {
+			setFormMode(
+				hasDikaioma(SysDikaiomaKodikos.ABC)
+					? SdadFormMode.EditingExisting
+					: SdadFormMode.ViewOnly);
+            return coreSys.load({$obj.name}.class, id);
+        }
+    }
+
+    private {$obj.name} newInstance() {
+        return {$obj.name}.builder().build();
+    }
+
+    @Override
+    protected void onInitialize() {
+
+        super.onInitialize();
+
+        form = new CompoundPropertyModelForm<>("form", initialState.modelObject) {
+            @Override
+            protected void onConfigure() {
+
+                super.onConfigure();
+                setEnabled(isEditing());
+
+            }
+        };
+        add(form);
+
+        {% loop in $obj.form_fields as $field %}
+        {$field.component_creation}
+        form.add({$field.name});
+
+        {% endloop %}
+        {.if ($obj.show_active) }
+        energo = new SdadYesNoField("markedActive") {
+            @Override
+            protected void onConfigure() {
+
+                super.onConfigure();
+                setVisibilityAllowed(!isEditingNew());
+
+            }
+        };
+        energo.add(Validators.immediateRequired());
+        form.add(energo);
+
+        {/if}
+
+        save = new SaveButton();
+        reset = new ResetButton();
+        form.add(save, reset);
+
+    }
+
+    private class SaveButton extends SdadAjaxSubmitLink {
+
+        public SaveButton() {
+
+            super("btnSave");
+
+        }
+
+        @Override
+        protected void defaultOnSubmit(AjaxRequestTarget target) {
+
+            super.defaultOnSubmit(target);
+            coreSys.save(form.getModelObject());
+
+            closeWithSuccessMessage(target, "message.successfully.saved");
+
+            log.debug("{}.defaultOnClick: {}", this.getId(), form.getModelObject());
+
+        }
+
+        @Override
+        protected void onConfigure() {
+
+            super.onConfigure();
+            setVisibilityAllowed(isEditing());
+
+        }
+    }
+
+    private class ResetButton extends SdadAjaxLink {
+
+        public ResetButton() {
+
+            super("btnReset");
+
+        }
+
+        @Override
+        protected void defaultOnClick(AjaxRequestTarget target) {
+
+            super.defaultOnClick(target);// update initial state object
+            initialState.initWith(loadOrCreate(initialState.modelId));
+
+            form.getModel().setObject(initialState.modelObject);
+
+            target.add(form);
+
+            successFormatted("message.successfully.reset");
+
+            log.debug("{}.defaultOnClick: {}", this.getId(), form.getModelObject());
+
+        }
+
+        @Override
+        protected void onConfigure() {
+
+            super.onConfigure();
+            setVisibilityAllowed(isEditing());
+
+        }
+    }
+
+}
+{#}

@@ -1,0 +1,17 @@
+{#1}
+--changeset sys:{$obj.name}-create
+create sequence sdad.{$obj.name}Seq start with 1 increment by {$obj.sql_seq_increment};
+create table sdad.{$obj.name} (
+    {% loop in $obj.sql_columns as $column %}
+    {$column},
+    {% endloop %}
+);
+{% loop in $obj.sql_indexes as $index %}
+{$index}
+{% onEmpty %}
+{% endloop %}
+{% loop in $obj.sql_unique_constraints as $constraint %}
+{$constraint}
+{% onEmpty %}
+{% endloop %}
+{#}

@@ -1,0 +1,11 @@
+{#1}
+# Entity/Page title
+title.singular=
+title.plural=
+title.alternative=
+# Form field captions
+{% loop in $obj.form_fields as $field %}
+caption.{$field.name}={$field.name_gr}
+{% endloop %}
+caption.energo=Ενεργό
+{#}

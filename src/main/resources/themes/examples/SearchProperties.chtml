@@ -1,0 +1,17 @@
+{#1}
+# Entity/Page title
+title.singular=?
+title.plural=??
+title.alternative=;;
+# Form field captions
+{% loop in $obj.search_fields as $field %}
+{% if($field.criterion != none || $field.column) %}
+caption.{$field.name}={$field.name_gr}
+{% endif %}
+{% if($field.criterion == range) %}
+caption.{$field.name}Apo={$field.name_gr} Από
+caption.{$field.name}Eos={$field.name_gr} Έως
+{% endif %}
+{% endloop %}
+caption.energo=Ενεργό
+{#}
